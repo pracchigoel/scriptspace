@@ -799,7 +799,7 @@
         <p>&copy; 2026 Scriptspace. All rights reserved. Built with passion for automation.</p>
     </footer>
 <script>
-        // Smooth scrolling
+        // Smooth scrolling for the navigation menu
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -811,50 +811,61 @@
         });
 
         // Form Submission Logic
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // This stops the page from redirecting!
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const statusMessage = document.getElementById('statusMessage');
-            
-            // Show loading state
-            submitBtn.innerText = "Sending...";
-            submitBtn.disabled = true;
-
-            // FIX 1: Format the data properly so Google Apps Script can read it
-            const formData = new FormData(this);
-            const data = new URLSearchParams(formData);
-
-            // FIX 2: Add mode: 'no-cors' to bypass GitHub Pages security blocks
-            fetch("https://script.google.com/macros/s/AKfycbyRnZnMu6hH-PcID2In7zf3HPLSrsxsZlAt0YT3zZsBMj465UaIc7QPHSkY9nqWdIWm3w/exec", {
-                method: 'POST',
-                body: data,
-                mode: 'no-cors' // <--- CRITICAL FOR GITHUB PAGES
-            })
-            .then(() => {
-                // If it successfully sends
-                statusMessage.innerText = 'Thank you! Your message has been sent successfully.';
-                statusMessage.style.color = '#28a745';
-                statusMessage.style.display = 'block';
-                document.getElementById('contactForm').reset(); // Clear the form
-            })
-            .catch((error) => {
-                // If the internet drops out
-                statusMessage.innerText = 'Connection error. Please check your internet and try again.';
-                statusMessage.style.color = '#dc3545';
-                statusMessage.style.display = 'block';
-            })
-            .finally(() => {
-                // Restore the button
-                submitBtn.innerText = "Send Message";
-                submitBtn.disabled = false;
+        const contactForm = document.getElementById('contactForm');
+        
+        if (contactForm) {
+            contactForm.addEventListener('submit', function(e) {
+                // 1. STOP THE PAGE FROM REFRESHING
+                e.preventDefault(); 
                 
-                // Hide the message after 5 seconds
-                setTimeout(() => {
-                    statusMessage.style.display = 'none';
-                }, 5000);
+                const submitBtn = document.getElementById('submitBtn');
+                const statusMessage = document.getElementById('statusMessage');
+                
+                // 2. Show loading state
+                submitBtn.innerText = "Sending...";
+                submitBtn.disabled = true;
+                statusMessage.style.display = 'none'; // Hide any old messages
+
+                // 3. Package the data exactly how Google wants it
+                const formData = new FormData(this);
+                const data = new URLSearchParams(formData);
+
+                // 4. Send it to your Google Sheet
+                const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyRnZnMu6hH-PcID2In7zf3HPLSrsxsZlAt0YT3zZsBMj465UaIc7QPHSkY9nqWdIWm3w/exec";
+
+                fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: data,
+                    mode: 'no-cors' // Bypasses GitHub Pages security blocks
+                })
+                .then(() => {
+                    // 5. Show Success Message
+                    statusMessage.innerText = 'Thank you! Your message has been sent successfully.';
+                    statusMessage.style.color = '#28a745'; // Green color
+                    statusMessage.style.display = 'block';
+                    
+                    // 6. Clear the form fields safely
+                    contactForm.reset(); 
+                })
+                .catch((error) => {
+                    // 7. Show Error Message if internet fails
+                    console.error(error);
+                    statusMessage.innerText = 'Connection error. Please check your internet and try again.';
+                    statusMessage.style.color = '#dc3545'; // Red color
+                    statusMessage.style.display = 'block';
+                })
+                .finally(() => {
+                    // 8. Put the button back to normal
+                    submitBtn.innerText = "Send Message";
+                    submitBtn.disabled = false;
+                    
+                    // 9. Hide the success message after 5 seconds
+                    setTimeout(() => {
+                        statusMessage.style.display = 'none';
+                    }, 5000);
+                });
             });
-        });
+        }
     </script>
 </body>
 </html>
