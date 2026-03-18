@@ -798,7 +798,7 @@
     <footer>
         <p>&copy; 2026 Scriptspace. All rights reserved. Built with passion for automation.</p>
     </footer>
-      <script>
+<script>
         // Smooth scrolling
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -810,12 +810,54 @@
             });
         });
 
-        // Form submission
-        // document.querySelector('form').addEventListener('submit', function(e) {
-        //     e.preventDefault();
-        //     alert('Thank you for your message! I will get back to you within 24 hours.');
-        //     this.reset();
-        // });
+        // Form submission logic
+        document.getElementById('contactForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            // UI Loading State
+            submitBtn.innerText = "Sending...";
+            submitBtn.disabled = true;
+
+            // Gather Data
+            const formData = {
+                fullname: document.getElementById('fullname').value,
+                email: document.getElementById('email').value,
+                company: document.getElementById('company').value,
+                projectDetails: document.getElementById('projectDetails').value
+            };
+
+            try {
+                // IMPORTANT: This points to your Node.js backend proxy route, NOT the Google URL directly
+                const response = await fetch('/api/submit-lead', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    statusMessage.innerText = 'Thank you! Your message has been sent successfully.';
+                    statusMessage.style.color = '#28a745';
+                    statusMessage.style.display = 'block';
+                    this.reset();
+                } else {
+                    statusMessage.innerText = 'Oops! Something went wrong. Please try again.';
+                    statusMessage.style.color = '#dc3545';
+                    statusMessage.style.display = 'block';
+                }
+            } catch (error) {
+                statusMessage.innerText = 'Connection error. Please check your internet.';
+                statusMessage.style.color = '#dc3545';
+                statusMessage.style.display = 'block';
+            } finally {
+                // Restore Button State
+                submitBtn.innerText = "Send Message";
+                submitBtn.disabled = false;
+                setTimeout(() => { statusMessage.style.display = 'none'; }, 5000);
+            }
+        });
     </script>
 </body>
 </html>
