@@ -768,24 +768,24 @@
                     </div>
                 </div>
             </div>
-          <div class="contact-form">
+        <div class="contact-form">
                 <form id="contactForm">
                     <h3>Get in Touch</h3>
                     <div class="form-group">
                         <label>Full Name</label>
-                        <input type="text" id="fullname" placeholder="Your Name" required>
+                        <input type="text" name="fullname" id="fullname" placeholder="Your Name" required>
                     </div>
                     <div class="form-group">
                         <label>Email Address</label>
-                        <input type="email" id="email" placeholder="your@email.com" required>
+                        <input type="email" name="email" id="email" placeholder="your@email.com" required>
                     </div>
                     <div class="form-group">
                         <label>Company</label>
-                        <input type="text" id="company" placeholder="Your company name">
+                        <input type="text" name="company" id="company" placeholder="Your company name">
                     </div>
                     <div class="form-group">
                         <label>Project Details</label>
-                        <textarea id="projectDetails" placeholder="Tell me about your Google Workspace challenges..." required></textarea>
+                        <textarea name="projectDetails" id="projectDetails" placeholder="Tell me about your Google Workspace challenges..." required></textarea>
                     </div>
                     <button type="submit" id="submitBtn" class="submit-btn">Send Message</button>
                     <p id="statusMessage" style="margin-top: 15px; text-align: center; font-weight: 500; display: none;"></p>
@@ -810,52 +810,49 @@
             });
         });
 
-        // Form submission logic
+        // Form Submission Logic
+        const GOOGLE_SCRIPT_URL = "PASTE_YOUR_GOOGLE_WEB_APP_URL_HERE";
+
         document.getElementById('contactForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+            e.preventDefault(); // This stops the page from redirecting to the Google success screen!
             
             const submitBtn = document.getElementById('submitBtn');
             const statusMessage = document.getElementById('statusMessage');
             
-            // UI Loading State
+            // Show loading state
             submitBtn.innerText = "Sending...";
             submitBtn.disabled = true;
 
-            // Gather Data
-            const formData = {
-                fullname: document.getElementById('fullname').value,
-                email: document.getElementById('email').value,
-                company: document.getElementById('company').value,
-                projectDetails: document.getElementById('projectDetails').value
-            };
+            // Gather the data from the form
+            const formData = new FormData(this);
 
             try {
-                // IMPORTANT: This points to your Node.js backend proxy route, NOT the Google URL directly
-                const response = await fetch('/api/submit-lead', {
+                // Send the data directly to Google Apps Script silently in the background
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(formData)
+                    body: formData
                 });
 
-                if (response.ok) {
-                    statusMessage.innerText = 'Thank you! Your message has been sent successfully.';
-                    statusMessage.style.color = '#28a745';
-                    statusMessage.style.display = 'block';
-                    this.reset();
-                } else {
-                    statusMessage.innerText = 'Oops! Something went wrong. Please try again.';
-                    statusMessage.style.color = '#dc3545';
-                    statusMessage.style.display = 'block';
-                }
+                // If it successfully sends
+                statusMessage.innerText = 'Thank you! Your message has been sent successfully.';
+                statusMessage.style.color = '#28a745';
+                statusMessage.style.display = 'block';
+                this.reset(); // Clear the form
+
             } catch (error) {
-                statusMessage.innerText = 'Connection error. Please check your internet.';
+                // If the internet drops out
+                statusMessage.innerText = 'Connection error. Please check your internet and try again.';
                 statusMessage.style.color = '#dc3545';
                 statusMessage.style.display = 'block';
             } finally {
-                // Restore Button State
+                // Restore the button
                 submitBtn.innerText = "Send Message";
                 submitBtn.disabled = false;
-                setTimeout(() => { statusMessage.style.display = 'none'; }, 5000);
+                
+                // Hide the message after 5 seconds
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
             }
         });
     </script>
