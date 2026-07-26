@@ -3,22 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketing Tool - Scriptspace</title>
+    <title>Dashboard - Marketing Tool</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow: hidden; /* Prevents double scrollbars */
-        }
-        iframe {
-            width: 100%;
-            height: 100vh;
-            border: none;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h1 { margin: 0; color: #1d1d1f; font-size: 24px; }
+        button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        button:hover { opacity: 0.9; }
+        .logout-btn { background: #dc3545; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-top: 5px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
+
+    <div class="header">
+        <div>
+            <h1>Marketing Dashboard</h1>
+            <small id="userEmailDisplay">Loading user...</small>
+        </div>
+        <button class="logout-btn" onclick="logout()">Log Out</button>
+    </div>
+
+    <!-- Data Entry Form -->
+    <div class="card">
+        <h3>Add New Campaign</h3>
+        <form id="dataForm">
+            <div class="form-group">
+                <label>Campaign Name</label>
+                <input type="text" id="campaignName" required>
+            </div>
+            <div class="form-group">
+                <label>Budget ($)</label>
+                <input type="number" id="budget" required>
+            </div>
+            <div class="form-group">
+                <label>Leads Generated</label>
+                <input type="number" id="leads" required>
+            </div>
+            <button type="submit" id="saveBtn">Save to My Database</button>
+        </form>
+        <p id="statusMsg"></p>
+    </div>
+
+    <!-- Data Display Table -->
+    <div class="card">
+        <h3>Your Campaign Data</h3>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Campaign</th>
+                    <th>Budget</th>
+                    <th>Leads</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <tr><td colspan="4">Loading your data...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycbyzpjOyHOQH50LME0TFApLWxr91js4qlfIcMUil47qf-ifX40UMWVqynLjc2IKEZElR2w/exec';
+        let currentUser = null;
+
+        // 1. SESSION CHECK (Runs immediately when page loads)
+        function checkSession() {
+            const session = localStorage.getItem('marketing_session');
+            if (!session) {
+                // If no session is found, kick them back to login
+                window.location.href = 'login.html';
+                return;
+            }
+            currentUser = JSON.parse(session);
+            document.getElementById('userEmailDisplay').innerText = `Logged in as: ${currentUser.email}`;
+            
+            // Fetch their specific data
+            fetchMyData();
+        }
+
+        // 2. FETCH DATA FROM TENANT SHEET
+        async function fetchMyData() {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'get_data',
+                        userId: currentUser.userId // Backend uses this to find their specific sheet
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    renderTable(result.data);
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+
+        // 3. RENDER DATA TO HTML TABLE
+        function renderTable(dataRows) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ''; // Clear loading text
+            
+            // Skip index 0 if it contains your sheet headers
+            for (let i = 1; i < dataRows.length; i++) {
+                const row = dataRows[i];
+                // Only render rows that actually have data
+                if (row[0]) {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${new Date(row[0]).toLocaleDateString()}</td>
+                            <td>${row[1]}</td>
+                            <td>$${row[2]}</td>
+                            <td>${row[3]}</td>
+                        </tr>
+                    `;
+                }
+            }
+        }
+
+        // 4. SAVE NEW DATA TO TENANT SHEET
+        document.getElementById('dataForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveBtn');
+            const statusMsg = document.getElementById('statusMsg');
+            
+            btn.innerText = 'Saving...';
+            btn.disabled = true;
+
+            const payload = {
+                campaignName: document.getElementById('campaignName').value,
+                budget: document.getElementById('budget').value,
+                leads: document.getElementById('leads').value
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: 'save_data',
+                        userId: currentUser.userId,
+                        payload: payload
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    statusMsg.innerText = "Saved successfully!";
+                    statusMsg.style.color = "green";
+                    document.getElementById('dataForm').reset();
+                    fetchMyData(); // Refresh the table automatically
+                }
+            } catch (error) {
+                statusMsg.innerText = "Error saving data.";
+                statusMsg.style.color = "red";
+            } finally {
+                btn.innerText = 'Save to My Database';
+                btn.disabled = false;
+                setTimeout(() => statusMsg.innerText = '', 3000); // Clear message after 3s
+            }
+        });
+
+        // 5. LOGOUT FUNCTION
+        function logout() {
+            localStorage.removeItem('marketing_session');
+            window.location.href = 'login.html';
+        }
+
+        // Initialize the app
+        checkSession();
+    </script>
+</body>
+</html>
     <!-- Replace the src link below with your actual Google Apps Script Web App URL -->
     <iframe src="https://script.google.com/macros/s/AKfycbwEO36vLS4ejHSZdirDhRvOioJglSUb1uijxFRszHOLXF622ZYVrbKfuPeYosG7S8ne/exec" title="Marketing Tool"></iframe>
 </body>
