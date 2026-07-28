@@ -1,187 +1,892 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Marketing Tool</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h1 { margin: 0; color: #1d1d1f; font-size: 24px; }
-        button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
-        .logout-btn { background: #dc3545; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-top: 5px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f8f9fa; }
-    </style>
+  <meta charset="UTF-8">
+  <base target="_top">
+  <title>ScriptSpace - Visit Management</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: { 
+            brand: { 50: '#eef2ff', 100: '#e0f2fe', 300: '#a5b4fc', 400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#312e81' },
+            accent: { 500: '#8b5cf6', 600: '#7c3aed' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; background-color: #f8fafc; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    
+    .nav-btn.active { background: linear-gradient(90deg, #eef2ff 0%, transparent 100%); color: #4f46e5; border-left: 4px solid #4f46e5; }
+    .dark .nav-btn.active { background: linear-gradient(90deg, #1e1b4b 0%, transparent 100%); color: #818cf8; border-left: 4px solid #818cf8; }
+    
+    .mobile-nav-btn.active { color: #4f46e5; text-shadow: 0 0 10px rgba(79, 70, 229, 0.3); }
+    .dark .mobile-nav-btn.active { color: #818cf8; }
+    
+    .star-rating i { cursor: pointer; color: #e2e8f0; font-size: 1.8rem; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .dark .star-rating i { color: #334155; }
+    .star-rating i.active { color: #f59e0b; transform: scale(1.1); }
+    .star-rating i:hover { transform: scale(1.2); }
+    
+    .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+    .dark .glass-panel { background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.05); }
+
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+  </style>
 </head>
-<body>
+<body class="text-slate-800 dark:text-slate-200 h-screen overflow-hidden flex flex-col md:flex-row relative">
 
-    <div class="header">
-        <div>
-            <h1>Marketing Dashboard</h1>
-            <small id="userEmailDisplay">Loading user...</small>
+  <!-- ================= AUTHENTICATION SHELL ================= -->
+  <div id="auth-container" class="fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity duration-500 bg-slate-900 before:absolute before:inset-0 before:bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] before:opacity-10">
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
+      <div class="absolute -top-40 -left-40 w-96 h-96 bg-brand-600 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob"></div>
+      <div class="absolute top-40 -right-20 w-96 h-96 bg-accent-600 rounded-full mix-blend-multiply filter blur-3xl opacity-50 animate-blob animation-delay-2000"></div>
+    </div>
+
+    <div class="glass-panel rounded-3xl shadow-2xl w-full max-w-4xl flex overflow-hidden min-h-[550px] relative z-10 border-white/20">
+      
+      <!-- Left Side Branding -->
+      <div class="hidden md:flex md:w-1/2 bg-gradient-to-br from-brand-900 to-brand-700 p-12 flex-col justify-between relative overflow-hidden">
+        <div class="z-10 relative text-white">
+          <div class="w-14 h-14 bg-white/10 backdrop-blur-md border border-white/20 text-white font-black rounded-2xl flex items-center justify-center text-2xl mb-8 shadow-lg">
+            <i class="fa-solid fa-code text-3xl"></i>
+          </div>
+          <h1 class="text-4xl font-extrabold mb-4 tracking-tight leading-tight">Empower Your<br><span class="text-brand-200">Workflow.</span></h1>
+          <p class="text-brand-100 text-base font-light opacity-90 leading-relaxed">ScriptSpace's intelligent portal for managing visits, capturing opportunities, and building relationships.</p>
         </div>
-        <button class="logout-btn" onclick="logout()">Log Out</button>
-    </div>
+      </div>
 
-    <!-- Data Entry Form -->
-    <div class="card">
-        <h3>Add New Campaign</h3>
-        <form id="dataForm">
-            <div class="form-group">
-                <label>Campaign Name</label>
-                <input type="text" id="campaignName" required>
+      <!-- Right Side Forms -->
+      <div class="w-full md:w-1/2 p-8 lg:p-12 flex flex-col justify-center bg-white dark:bg-slate-900 relative">
+        <button onclick="toggleTheme()" type="button" class="absolute top-6 right-6 w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 transition-colors z-20 cursor-pointer">
+          <i class="fa-solid fa-moon dark:hidden"></i>
+          <i class="fa-solid fa-sun hidden dark:block"></i>
+        </button>
+
+        <!-- LOGIN SCREEN -->
+        <div id="screen-login" class="w-full max-w-md mx-auto space-y-8">
+          <div>
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white">Sign In</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Welcome back to your workspace.</p>
+          </div>
+
+          <div class="space-y-5">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1">Email Address</label>
+              <div class="relative">
+                <i class="fa-solid fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                <input type="email" id="loginEmail" required class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+              </div>
             </div>
-            <div class="form-group">
-                <label>Budget ($)</label>
-                <input type="number" id="budget" required>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide mb-1">Password</label>
+              <div class="relative">
+                <i class="fa-solid fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400"></i>
+                <input type="password" id="loginPassword" required class="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white focus:bg-white dark:focus:bg-slate-700 focus:ring-2 focus:ring-brand-500 outline-none transition-all">
+              </div>
             </div>
-            <div class="form-group">
-                <label>Leads Generated</label>
-                <input type="number" id="leads" required>
+            <div class="flex justify-between items-center text-sm">
+              <label class="flex items-center gap-2 text-slate-600 dark:text-slate-400 cursor-pointer font-medium"><input type="checkbox" class="rounded text-brand-500 focus:ring-brand-500 w-4 h-4"> Remember me</label>
+              <button type="button" onclick="toggleAuth('forgot')" class="text-brand-600 dark:text-brand-400 font-bold hover:text-brand-800 dark:hover:text-brand-300">Forgot Password?</button>
             </div>
-            <button type="submit" id="saveBtn">Save to My Database</button>
-        </form>
-        <p id="statusMsg"></p>
+            <button type="button" onclick="handleLogin(event)" id="btn-login" class="w-full py-3.5 bg-gradient-to-r from-brand-600 to-accent-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:-translate-y-0.5 transition-all">Sign In to Dashboard</button>
+          </div>
+        </div>
+
+        <!-- FORGOT PASSWORD SCREEN -->
+        <div id="screen-forgot" class="hidden w-full max-w-md mx-auto space-y-8">
+          <div><h2 class="text-3xl font-extrabold text-slate-900 dark:text-white">Reset Password</h2></div>
+          <div id="otpStep1" class="space-y-5">
+            <input type="email" id="resetEmail" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white" placeholder="Registered Email">
+            <button onclick="requestOTP()" id="btn-otp-req" class="w-full py-3.5 bg-brand-600 text-white font-bold rounded-xl">Send OTP</button>
+          </div>
+          <div id="otpStep2" class="hidden space-y-5">
+            <input type="text" id="resetOTP" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white" placeholder="Enter 6-Digit OTP">
+            <input type="password" id="resetNewPassword" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-white" placeholder="New Password">
+            <button onclick="verifyOTP()" id="btn-otp-ver" class="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-xl">Reset Password</button>
+          </div>
+          <button onclick="toggleAuth('login')" class="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white font-medium"><i class="fa-solid fa-arrow-left mr-2"></i>Back to login</button>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Data Display Table -->
-    <div class="card">
-        <h3>Your Campaign Data</h3>
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Campaign</th>
-                    <th>Budget</th>
-                    <th>Leads</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                <tr><td colspan="4">Loading your data...</td></tr>
-            </tbody>
-        </table>
-    </div>
+  <!-- ================= MAIN APP SHELL ================= -->
+  <div id="appShell" class="hidden flex-1 flex flex-col md:flex-row h-full w-full relative">
+    
+    <!-- Desktop Sidebar -->
+    <aside class="hidden md:flex w-72 glass-panel border-r flex-col h-full z-20 transition-colors duration-300">
+      <div class="h-20 flex items-center px-6 border-b border-slate-200/50 dark:border-slate-700/50">
+        <div class="w-10 h-10 bg-gradient-to-br from-brand-600 to-accent-600 text-white font-black rounded-xl flex items-center justify-center text-lg mr-3 shadow-md">
+           <i class="fa-solid fa-code"></i>
+        </div>
+        <span class="font-extrabold text-slate-900 dark:text-white tracking-wide text-xl">ScriptSpace</span>
+      </div>
+      
+      <div class="p-6 pb-4 border-b border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-brand-100 dark:border-brand-900 flex items-center justify-center text-brand-600 dark:text-brand-400 font-extrabold text-xl" id="deskUserInitial">A</div>
+          <div>
+            <p id="deskUserName" class="text-sm font-bold text-slate-900 dark:text-white leading-tight">User Name</p>
+            <p id="deskUserRole" class="text-xs font-medium text-brand-600 dark:text-brand-300">Role</p>
+          </div>
+        </div>
+        <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-300 transition-colors">
+          <i class="fa-solid fa-moon dark:hidden"></i><i class="fa-solid fa-sun hidden dark:block"></i>
+        </button>
+      </div>
 
-    <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyzpjOyHOQH50LME0TFApLWxr91js4qlfIcMUil47qf-ifX40UMWVqynLjc2IKEZElR2w/exec';        
-        let currentUser = null;
+      <nav class="flex-1 overflow-y-auto py-6 px-3">
+        <ul class="space-y-2">
+          <li id="nav-dashboard-item"><button onclick="navTo('dashboard')" class="nav-btn rounded-xl w-full flex items-center px-4 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white transition-colors"><i class="fa-solid fa-chart-pie w-8 text-lg"></i> Dashboard</button></li>
+          <li><button onclick="navTo('history')" class="nav-btn rounded-xl w-full flex items-center px-4 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white transition-colors"><i class="fa-solid fa-clock-rotate-left w-8 text-lg"></i> History</button></li>
+          <li><button onclick="navTo('visit-entry')" class="nav-btn rounded-xl w-full flex items-center px-4 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white transition-colors"><i class="fa-solid fa-location-dot w-8 text-lg"></i> Add Visit</button></li>
+          <li><button onclick="navTo('scanner')" class="nav-btn rounded-xl w-full flex items-center px-4 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white transition-colors"><i class="fa-solid fa-address-card w-8 text-lg"></i> Card Scanner</button></li>
+          <li><button onclick="navTo('opportunity')" class="nav-btn rounded-xl w-full flex items-center px-4 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white transition-colors"><i class="fa-solid fa-lightbulb w-8 text-lg"></i> Opportunity</button></li>
+          <li><button onclick="navTo('feedback')" class="nav-btn rounded-xl w-full flex items-center px-4 py-3.5 text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white transition-colors"><i class="fa-solid fa-star-half-stroke w-8 text-lg"></i> Feedback</button></li>
+        </ul>
+      </nav>
+      <div class="p-4 border-t border-slate-200/50 dark:border-slate-700/50">
+        <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-3.5 text-sm text-slate-600 dark:text-slate-300 font-bold hover:bg-rose-50 dark:hover:bg-rose-900/30 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl transition-all"><i class="fa-solid fa-power-off"></i> Sign Out</button>
+      </div>
+    </aside>
 
-        // 1. SESSION CHECK (Runs immediately when page loads)
-        function checkSession() {
-            const session = localStorage.getItem('marketing_session');
-            if (!session) {
-                // If no session is found, kick them back to login
-                window.location.href = 'login.html';
-                return;
-            }
-            currentUser = JSON.parse(session);
-            document.getElementById('userEmailDisplay').innerText = `Logged in as: ${currentUser.email}`;
-            
-            // Fetch their specific data
-            fetchMyData();
-        }
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-[#f8fafc] dark:bg-[#0f172a]">
+      
+      <!-- Mobile Header -->
+      <header class="md:hidden glass-panel h-16 border-b dark:border-slate-800 flex items-center justify-between px-4 z-30 shadow-sm">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 bg-gradient-to-br from-brand-600 to-accent-600 text-white font-black rounded-lg flex items-center justify-center text-sm">
+             <i class="fa-solid fa-code text-xs"></i>
+          </div>
+          <span class="font-extrabold text-slate-900 dark:text-white">ScriptSpace</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button onclick="toggleTheme()" class="text-slate-400 dark:text-slate-300 hover:text-brand-600 dark:hover:text-brand-400"><i class="fa-solid fa-moon dark:hidden text-lg"></i><i class="fa-solid fa-sun hidden dark:block text-lg"></i></button>
+          <button onclick="logout()" class="text-slate-400 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400"><i class="fa-solid fa-power-off text-lg"></i></button>
+        </div>
+      </header>
 
-        // 2. FETCH DATA FROM TENANT SHEET
-        async function fetchMyData() {
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'get_data',
-                        userId: currentUser.userId // Backend uses this to find their specific sheet
-                    })
-                });
+      <main class="flex-1 overflow-y-auto p-4 md:p-10 pb-24 md:pb-10 relative">
+        <div class="max-w-6xl mx-auto relative z-10">
+          
+          <!-- DASHBOARD SCREEN -->
+          <section id="screen-dashboard" class="app-screen space-y-8">
+            <div>
+              <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Performance Overview</h2>
+              <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Live data fetched from your database.</p>
+            </div>
+
+            <!-- Beautiful KPI Cards -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+              <div class="glass-panel p-6 rounded-3xl shadow-sm border card-hover flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-shoe-prints"></i></div>
+                <div>
+                  <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Total Visits</p>
+                  <p class="text-3xl font-black text-slate-900 dark:text-white" id="dashTotalVisits">--</p>
+                </div>
+              </div>
+              <div class="glass-panel p-6 rounded-3xl shadow-sm border card-hover flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-address-book"></i></div>
+                <div>
+                  <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Contacts</p>
+                  <p class="text-3xl font-black text-slate-900 dark:text-white" id="dashTotalContacts">--</p>
+                </div>
+              </div>
+              <div class="glass-panel p-6 rounded-3xl shadow-sm border card-hover flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-lightbulb"></i></div>
+                <div>
+                  <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Opps</p>
+                  <p class="text-3xl font-black text-slate-900 dark:text-white" id="dashOpps">--</p>
+                </div>
+              </div>
+              <div class="glass-panel p-6 rounded-3xl shadow-sm border card-hover flex items-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl"><i class="fa-solid fa-comments"></i></div>
+                <div>
+                  <p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">Feedback</p>
+                  <p class="text-3xl font-black text-slate-900 dark:text-white" id="dashFeedback">--</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="glass-panel p-6 md:p-8 rounded-3xl shadow-sm border">
+              <h3 class="text-lg font-bold text-slate-800 dark:text-white mb-6">Visit Trend Analysis</h3>
+              <div class="relative h-72 w-full"><canvas id="visitTrendChart"></canvas></div>
+            </div>
+          </section>
+
+          <!-- VISIT ENTRY SCREEN -->
+          <section id="screen-visit-entry" class="app-screen hidden space-y-6">
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Log Client Visit</h2>
+            <form class="glass-panel p-6 md:p-8 rounded-3xl shadow-sm border space-y-6">
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Company Name</label>
+                  <input type="text" id="v_company" onkeyup="syncCompany()" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Plant Location</label>
+                  <input type="text" id="v_location" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Person Met</label>
+                  <input type="text" id="v_personMet" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Client Designation</label>
+                  <input type="text" id="v_designation" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Mobile Number</label>
+                  <input type="text" id="v_mobile" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Client Email (For Thank You Note)</label>
+                  <input type="email" id="v_email" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Purpose of Visit</label>
+                  <input type="text" id="v_purpose" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Your Name/Role (Executive)</label>
+                  <input type="text" id="v_executive" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Meeting Notes</label>
+                <textarea id="v_notes" rows="3" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Capture Site Photo</label>
+                <input type="file" id="v_camera" accept="image/*" capture="environment" class="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm dark:text-slate-300 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-brand-50 file:text-brand-700 hover:file:bg-brand-100">
+              </div>
+
+              <!-- START / STOP BUTTONS -->
+              <div class="mt-6 border-t border-slate-200 dark:border-slate-700 pt-6">
+                <div class="flex flex-col sm:flex-row gap-4">
+                  <button type="button" id="startBtn" onclick="startVisit()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg transition-all"><i class="fa-solid fa-play mr-2"></i> Check-In (Start Visit)</button>
+                  <button type="button" id="stopBtn" onclick="stopVisit()" disabled class="flex-1 py-3.5 bg-rose-600 text-white font-bold rounded-xl shadow-lg opacity-50 cursor-not-allowed transition-all"><i class="fa-solid fa-stop mr-2"></i> Check-Out (Stop & Save)</button>
+                </div>
+                <div id="timeStatus" class="text-center mt-4 text-lg font-bold text-slate-500 dark:text-slate-400">Not Started</div>
+              </div>
+
+            </form>
+          </section>
+
+          <!-- CARD SCANNER SCREEN -->
+          <section id="screen-scanner" class="app-screen hidden space-y-6">
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Visiting Card Scanner</h2>
+            <div class="glass-panel p-6 md:p-8 rounded-3xl shadow-sm border flex flex-col items-center">
+              
+              <div class="relative w-full max-w-md aspect-[4/3] bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center shadow-inner border border-slate-700">
+                <video id="cameraFeed" autoplay playsinline class="hidden w-full h-full object-cover"></video>
+                <canvas id="cameraCanvas" class="hidden w-full h-full object-cover"></canvas>
                 
-                const result = await response.json();
-                if (result.success) {
-                    renderTable(result.data);
-                }
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
+                <div id="cameraPlaceholder" class="text-center p-6 text-slate-400">
+                  <i class="fa-solid fa-camera text-4xl mb-3 opacity-50"></i>
+                  <p class="text-sm font-medium">Camera is off.<br>Click 'Start Camera' to scan a card.</p>
+                </div>
+
+                <div id="viewfinder" class="hidden absolute inset-6 border-2 border-white/50 rounded-lg pointer-events-none flex flex-col items-center justify-center">
+                  <div class="w-full h-0.5 bg-brand-500/80 animate-[scan_2s_ease-in-out_infinite] absolute top-0"></div>
+                </div>
+              </div>
+              
+              <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8 w-full max-w-md">
+                <button id="btnStartCam" onclick="startCamera()" class="flex-1 px-6 py-3.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm"><i class="fa-solid fa-video mr-2"></i> Start Camera</button>
+                <button id="btnCapture" onclick="captureCard()" disabled class="flex-1 px-6 py-3.5 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/30 opacity-50 cursor-not-allowed transition-all"><i class="fa-solid fa-camera-retro mr-2"></i> Capture Card</button>
+              </div>
+
+              <div id="scanResults" class="hidden w-full max-w-md mt-6 space-y-3 bg-emerald-50 dark:bg-emerald-900/20 p-4 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
+                <p class="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase"><i class="fa-solid fa-check-circle mr-1"></i> Card Extracted Successfully</p>
+                <input type="text" value="Rahul Verma" class="w-full p-2 text-sm rounded bg-white dark:bg-slate-800 dark:text-white border-none shadow-sm font-medium">
+                <input type="text" value="Purchase Manager | ABC Industries" class="w-full p-2 text-sm rounded bg-white dark:bg-slate-800 dark:text-white border-none shadow-sm text-slate-500 dark:text-slate-400">
+                <button onclick="alert('Saved to contacts!')" class="w-full py-2 bg-emerald-600 text-white rounded font-bold text-sm">Save Contact</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- FEEDBACK SCREEN -->
+          <section id="screen-feedback" class="app-screen hidden space-y-6">
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Client Feedback</h2>
+            <form class="glass-panel p-6 md:p-8 rounded-3xl shadow-sm border max-w-2xl space-y-6 mx-auto">
+              <div class="space-y-4">
+                <div class="flex justify-between items-center p-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                  <span class="font-bold text-slate-700 dark:text-slate-300">Product Quality</span>
+                  <div class="star-rating"><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star"></i></div>
+                </div>
+                <div class="flex justify-between items-center p-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                  <span class="font-bold text-slate-700 dark:text-slate-300">Delivery Performance</span>
+                  <div class="star-rating"><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i></div>
+                </div>
+                <div class="flex justify-between items-center p-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                  <span class="font-bold text-slate-700 dark:text-slate-300">Technical Support</span>
+                  <div class="star-rating"><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i><i class="fa-solid fa-star active"></i></div>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Detailed Remarks</label>
+                <textarea rows="4" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white focus:ring-2 focus:ring-brand-500 outline-none"></textarea>
+              </div>
+              <button type="button" onclick="alert('Feedback Submitted!')" class="w-full py-3.5 bg-brand-600 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all">Submit Feedback</button>
+            </form>
+          </section>
+
+          <!-- CLIENT HISTORY SCREEN -->
+          <section id="screen-history" class="app-screen hidden space-y-6">
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Client History</h2>
+            <div class="glass-panel p-6 md:p-8 rounded-3xl shadow-sm border space-y-6">
+              
+              <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                  <label class="text-sm font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">Filter by Date:</label>
+                  <input type="date" id="dateFilter" onchange="filterHistory()" class="w-full sm:w-auto px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="px-4 py-2 bg-brand-100 dark:bg-brand-900/50 text-brand-700 dark:text-brand-300 rounded-lg font-bold text-sm">
+                  <i class="fa-solid fa-building mr-2"></i><span id="visitCount">Total Visited: 0</span>
+                </div>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="border-b-2 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 text-sm uppercase tracking-wider">
+                      <th class="p-4 font-bold">Date</th>
+                      <th class="p-4 font-bold">Location</th>
+                      <th class="p-4 font-bold">Company</th>
+                    </tr>
+                  </thead>
+                  <tbody id="historyTableBody" class="text-slate-700 dark:text-slate-300">
+                    <!-- JavaScript will inject rows here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <!-- OPPORTUNITY SCREEN -->
+          <section id="screen-opportunity" class="app-screen hidden space-y-6">
+            <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">New Opportunity</h2>
+            <form class="glass-panel p-6 md:p-8 rounded-3xl shadow-sm border max-w-3xl space-y-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Company Name</label>
+                  <input type="text" id="o_company" readonly placeholder="Auto-filled from Visit" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 outline-none cursor-not-allowed">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Cable Type</label>
+                  <select class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white outline-none">
+                    <option>LT Power Cable</option><option>HT Power Cable</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Est. Order Value (₹)</label>
+                  <input type="number" class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 dark:text-white outline-none">
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">Priority Level</label>
+                  <div class="grid grid-cols-3 gap-3">
+                    <label class="flex items-center justify-center p-3 rounded-xl bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800/50 cursor-pointer font-bold hover:bg-red-100 dark:hover:bg-red-900/50 transition"><input type="radio" name="oppPriority" checked class="hidden"> Hot</label>
+                    <label class="flex items-center justify-center p-3 rounded-xl bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800/50 cursor-pointer font-bold hover:bg-orange-100 dark:hover:bg-orange-900/50 transition"><input type="radio" name="oppPriority" class="hidden"> Warm</label>
+                    <label class="flex items-center justify-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 cursor-pointer font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition"><input type="radio" name="oppPriority" class="hidden"> Cold</label>
+                  </div>
+                </div>
+              </div>
+              <button type="button" onclick="alert('Opportunity Logged!')" class="w-full py-3.5 bg-brand-600 text-white font-bold rounded-xl shadow-lg hover:-translate-y-0.5 transition-all">Save Opportunity</button>
+            </form>
+          </section>
+
+        </div>
+      </main>
+      
+      <!-- Mobile Bottom Navigation -->
+      <nav class="md:hidden glass-panel border-t dark:border-slate-800 fixed bottom-0 w-full z-30 pb-safe">
+        <div class="flex justify-around items-center h-[72px] px-2">
+          <button id="mobile-nav-dashboard-item" onclick="navTo('dashboard')" class="mobile-nav-btn active flex flex-col items-center justify-center w-full text-slate-500 dark:text-slate-400 hover:text-brand-600 transition">
+            <i class="fa-solid fa-chart-pie text-2xl mb-1"></i><span class="text-[10px] font-bold">Board</span>
+          </button>
+          <button onclick="navTo('visit-entry')" class="mobile-nav-btn flex flex-col items-center justify-center w-full text-slate-500 dark:text-slate-400 hover:text-brand-600 transition">
+            <i class="fa-solid fa-location-dot text-2xl mb-1"></i><span class="text-[10px] font-bold">Visit</span>
+          </button>
+          <button onclick="navTo('scanner')" class="mobile-nav-btn flex flex-col items-center justify-center w-full text-slate-500 dark:text-slate-400 hover:text-brand-600 transition">
+            <i class="fa-solid fa-address-card text-2xl mb-1"></i><span class="text-[10px] font-bold">Scan</span>
+          </button>
+          <button onclick="navTo('opportunity')" class="mobile-nav-btn flex flex-col items-center justify-center w-full text-slate-500 dark:text-slate-400 hover:text-brand-600 transition">
+            <i class="fa-solid fa-lightbulb text-2xl mb-1"></i><span class="text-[10px] font-bold">Opp</span>
+          </button>
+        </div>
+        <button onclick="navTo('history')" class="mobile-nav-btn flex flex-col items-center justify-center w-full text-slate-500 dark:text-slate-400 hover:text-brand-600 transition">
+        <i class="fa-solid fa-clock-rotate-left text-2xl mb-1"></i><span class="text-[10px] font-bold">History</span>
+        </button>
+      </nav>
+
+    </div>
+  </div>
+
+<style>
+  @keyframes blob { 0% { transform: translate(0px, 0px) scale(1); } 33% { transform: translate(30px, -50px) scale(1.1); } 66% { transform: translate(-20px, 20px) scale(0.9); } 100% { transform: translate(0px, 0px) scale(1); } }
+  @keyframes scan { 0% { top: 0; } 50% { top: 100%; } 100% { top: 0; } }
+  .animate-blob { animation: blob 7s infinite; }
+  .animation-delay-2000 { animation-delay: 2s; }
+</style>
+
+<script>
+  // 1. YOUR DEPLOYED WEB APP URL
+  const API_URL = 'https://script.google.com/macros/s/AKfycbyzpjOyHOQH50LME0TFApLWxr91js4qlfIcMUil47qf-ifX40UMWVqynLjc2IKEZElR2w/exec';
+
+  let currentUser = null;
+  let streamRef = null;
+  let fullHistoryData = [];
+
+  // --- Theme Toggling ---
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    if (chartInstance) renderTrendChart();
+  }
+  if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.classList.add('dark');
+  }
+
+  // --- Auth UI Management ---
+  function toggleAuth(view) {
+    document.getElementById('screen-forgot').classList.toggle('hidden', view === 'login');
+    document.getElementById('screen-login').classList.toggle('hidden', view === 'forgot');
+  }
+
+  // --- Actual Backend Login Validation via Fetch API ---
+  async function handleLogin(e) {
+    if(e) e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const pwd = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('btn-login');
+    
+    if(!email || !pwd) return;
+    
+    btn.innerText = "Signing in...";
+    
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'login', email: email, password: pwd })
+      });
+      
+      const res = await response.json();
+      btn.innerText = "Sign In to Dashboard";
+      
+      if(res && res.success) { 
+        loginSuccess(res.user); 
+      } else { 
+        alert(res ? res.message : "Authentication Failed"); 
+      }
+    } catch (err) {
+      btn.innerText = "Sign In to Dashboard";
+      alert("Connection failed. Did you paste the correct API_URL?");
+      console.error(err);
+    }
+  }
+
+  function loginSuccess(user) {
+    currentUser = user || {};
+    let safeName = currentUser.name || "User";
+    let safeRole = currentUser.role || "Executive";
+
+    document.getElementById('deskUserName').innerText = safeName;
+    document.getElementById('deskUserRole').innerText = safeRole;
+    document.getElementById('deskUserInitial').innerText = safeName.charAt(0).toUpperCase();
+
+    document.getElementById('auth-container').classList.add('opacity-0', 'pointer-events-none');
+    setTimeout(() => {
+      document.getElementById('auth-container').classList.add('hidden');
+      document.getElementById('appShell').classList.remove('hidden');
+      
+      if (safeRole.toLowerCase().includes('executive')) {
+        document.getElementById('nav-dashboard-item').style.display = 'none';
+        document.getElementById('mobile-nav-dashboard-item').style.display = 'none';
+        navTo('visit-entry'); 
+      } else {
+        document.getElementById('nav-dashboard-item').style.display = 'block';
+        document.getElementById('mobile-nav-dashboard-item').style.display = 'flex';
+        navTo('dashboard'); 
+        loadDashboardData(); 
+      }
+    }, 300);
+  }
+
+  function logout() {
+    currentUser = null;
+    stopCamera(); 
+    document.getElementById('appShell').classList.add('hidden');
+    const auth = document.getElementById('auth-container');
+    auth.classList.remove('hidden', 'pointer-events-none');
+    setTimeout(() => { auth.classList.remove('opacity-0'); }, 10);
+    toggleAuth('login');
+    document.getElementById('loginPassword').value = '';
+  }
+
+  // --- Load Dynamic Dashboard Data ---
+  async function loadDashboardData() {
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'get_data', userId: currentUser.userId })
+      });
+      
+      const result = await response.json();
+      if(result.success && result.data) {
+        let totalVisits = Math.max(0, result.data.length - 1);
+        document.getElementById('dashTotalVisits').innerText = totalVisits;
+        
+        // Map real backend columns to the frontend history view
+        fullHistoryData = result.data.slice(1).map(row => ({
+           dateRaw: row[1],
+           date: new Date(row[1]).toLocaleDateString(),
+           dateISO: new Date(row[1]).toISOString().split('T')[0],
+           company: row[3] || 'Unknown',
+           location: row[4] || 'N/A',
+           executive: row[2] || 'N/A',
+           start: row[11] || '--',
+           stop: row[12] || '--'
+        })).reverse(); 
+        
+        renderHistory(fullHistoryData);
+      }
+    } catch(e) {
+      console.warn("Could not load backend data:", e);
+    }
+  }
+
+  // --- App Navigation ---
+  function navTo(screenName) {
+    if(screenName !== 'scanner') stopCamera(); 
+
+    document.querySelectorAll('.app-screen').forEach(el => el.classList.add('hidden'));
+    document.getElementById('screen-' + screenName).classList.remove('hidden');
+    
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.mobile-nav-btn').forEach(btn => btn.classList.remove('active'));
+    
+    try {
+      if(typeof event !== 'undefined' && event && event.currentTarget && event.currentTarget.classList) {
+        if(event.currentTarget.classList.contains('nav-btn')) event.currentTarget.classList.add('active');
+        if(event.currentTarget.classList.contains('mobile-nav-btn')) event.currentTarget.classList.add('active');
+      }
+    } catch(e) {
+      console.log("Programmatic navigation triggered.");
+    }
+
+    if(screenName === 'dashboard') {
+      setTimeout(() => { renderTrendChart(); }, 50);
+      if(currentUser && !currentUser.role.toLowerCase().includes('executive')) loadDashboardData();
+    }
+  }
+
+  // --- Real Camera Scanner Logic ---
+  function startCamera() {
+    const video = document.getElementById('cameraFeed');
+    const placeholder = document.getElementById('cameraPlaceholder');
+    const viewfinder = document.getElementById('viewfinder');
+    const btnStart = document.getElementById('btnStartCam');
+    const btnCapture = document.getElementById('btnCapture');
+    const canvas = document.getElementById('cameraCanvas');
+    const results = document.getElementById('scanResults');
+    
+    canvas.classList.add('hidden');
+    results.classList.add('hidden');
+
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        streamRef = stream;
+        video.srcObject = stream;
+        video.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        viewfinder.classList.remove('hidden');
+        
+        btnStart.classList.add('hidden');
+        btnCapture.disabled = false;
+        btnCapture.classList.remove('opacity-50', 'cursor-not-allowed');
+        btnCapture.classList.add('hover:-translate-y-0.5');
+      })
+      .catch(err => {
+        alert("Camera access denied or unavailable on this device.");
+        console.error(err);
+      });
+  }
+
+  function captureCard() {
+    const video = document.getElementById('cameraFeed');
+    const canvas = document.getElementById('cameraCanvas');
+    const viewfinder = document.getElementById('viewfinder');
+    const btnCapture = document.getElementById('btnCapture');
+    const btnStart = document.getElementById('btnStartCam');
+    const results = document.getElementById('scanResults');
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    stopCamera();
+    
+    video.classList.add('hidden');
+    viewfinder.classList.add('hidden');
+    canvas.classList.remove('hidden');
+    
+    btnCapture.innerText = "Processing...";
+    btnCapture.disabled = true;
+
+    setTimeout(() => {
+      btnCapture.innerHTML = '<i class="fa-solid fa-camera-retro mr-2"></i> Retake Photo';
+      btnCapture.disabled = false;
+      btnCapture.onclick = startCamera; 
+      
+      btnStart.classList.remove('hidden'); 
+      results.classList.remove('hidden'); 
+    }, 1500);
+  }
+
+  function stopCamera() {
+    if (streamRef) {
+      streamRef.getTracks().forEach(track => track.stop());
+      streamRef = null;
+    }
+  }
+
+  // --- Star Rating Interaction ---
+  document.querySelectorAll('.star-rating i').forEach(star => {
+    star.addEventListener('click', function() {
+      let active = false;
+      Array.from(this.parentNode.children).forEach(s => {
+        if (!active) { s.classList.add('active'); s.classList.remove('text-slate-200', 'dark:text-slate-700'); }
+        else { s.classList.remove('active'); s.classList.add('text-slate-200', 'dark:text-slate-700'); }
+        if (s === this) active = true;
+      });
+    });
+  });
+
+  // --- Chart Setup ---
+  let chartInstance = null;
+  function renderTrendChart() {
+    const ctx = document.getElementById('visitTrendChart');
+    if(!ctx) return;
+    if(chartInstance) chartInstance.destroy();
+    const isDark = document.documentElement.classList.contains('dark');
+    
+    chartInstance = new Chart(ctx.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: ['May 1', 'May 5', 'May 10', 'May 15', 'May 20'],
+        datasets: [{ 
+          label: 'Visits', data: [12, 22, 15, 28, 20], 
+          borderColor: '#6366f1', backgroundColor: isDark ? 'rgba(99, 102, 241, 0.15)' : 'rgba(99, 102, 241, 0.1)',
+          borderWidth: 4, tension: 0.4, fill: true, pointBackgroundColor: '#ffffff', pointBorderColor: '#6366f1', pointBorderWidth: 2, pointRadius: 4
+        }]
+      },
+      options: { 
+        responsive: true, maintainAspectRatio: false, 
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { display: false } },
+          y: { ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: isDark ? '#334155' : '#e2e8f0', borderDash: [4, 4] } }
         }
+      }
+    });
+  }
 
-        // 3. RENDER DATA TO HTML TABLE
-        function renderTable(dataRows) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = ''; // Clear loading text
-            
-            // Skip index 0 if it contains your sheet headers
-            for (let i = 1; i < dataRows.length; i++) {
-                const row = dataRows[i];
-                // Only render rows that actually have data
-                if (row[0]) {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${new Date(row[0]).toLocaleDateString()}</td>
-                            <td>${row[1]}</td>
-                            <td>$${row[2]}</td>
-                            <td>${row[3]}</td>
-                        </tr>
-                    `;
-                }
-            }
+
+  // --- CRM LOGIC: Autofill, Timer, Image Compression, and History ---
+
+  function syncCompany() {
+    const vComp = document.getElementById('v_company');
+    const oComp = document.getElementById('o_company');
+    if(vComp && oComp) oComp.value = vComp.value;
+  }
+
+  let checkInTime = null;
+  let visitTimerInterval = null;
+
+  function startVisit() {
+    checkInTime = new Date();
+    document.getElementById('startBtn').disabled = true;
+    document.getElementById('startBtn').classList.add('opacity-50', 'cursor-not-allowed');
+    
+    document.getElementById('stopBtn').disabled = false;
+    document.getElementById('stopBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+    document.getElementById('stopBtn').classList.add('hover:bg-rose-700', 'hover:-translate-y-0.5');
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            window.currentGPS = `${position.coords.latitude}, ${position.coords.longitude}`;
+        }, () => { window.currentGPS = "GPS Denied"; });
+    }
+
+    visitTimerInterval = setInterval(() => {
+        let diff = Math.floor((new Date() - checkInTime) / 1000);
+        let mins = Math.floor(diff / 60);
+        let secs = diff % 60;
+        document.getElementById('timeStatus').innerText = `Visit in progress: ${mins}m ${secs}s`;
+        document.getElementById('timeStatus').classList.remove('text-slate-500', 'dark:text-slate-400');
+        document.getElementById('timeStatus').classList.add('text-brand-600', 'dark:text-brand-400', 'animate-pulse');
+    }, 1000);
+  }
+
+  function compressImage(file, maxWidth, maxHeight, quality) {
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = function(event) {
+              const img = new Image();
+              img.src = event.target.result;
+              img.onload = function() {
+                  const canvas = document.createElement('canvas');
+                  let width = img.width, height = img.height;
+                  if (width > height) {
+                      if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; }
+                  } else {
+                      if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; }
+                  }
+                  canvas.width = width; canvas.height = height;
+                  canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                  resolve(canvas.toDataURL('image/jpeg', quality));
+              };
+              img.onerror = reject;
+          };
+          reader.onerror = reject;
+      });
+  }
+
+  // --- UPDATED STOP VISIT LOGIC ---
+  async function stopVisit() {
+    clearInterval(visitTimerInterval);
+    let checkOutTime = new Date();
+    let statusEl = document.getElementById('timeStatus');
+    
+    statusEl.classList.remove('animate-pulse');
+    statusEl.innerText = "Processing Photo & Data...";
+    document.getElementById('stopBtn').disabled = true;
+    document.getElementById('stopBtn').classList.add('opacity-50', 'cursor-not-allowed');
+
+    let finalPhotoString = "";
+    const cameraInput = document.getElementById('v_camera');
+    if (cameraInput.files && cameraInput.files[0]) {
+        try {
+            finalPhotoString = await compressImage(cameraInput.files[0], 800, 800, 0.7);
+        } catch (error) {
+            console.error("Image processing failed:", error);
         }
+    }
 
-        // 4. SAVE NEW DATA TO TENANT SHEET
-        document.getElementById('dataForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('saveBtn');
-            const statusMsg = document.getElementById('statusMsg');
-            
-            btn.innerText = 'Saving...';
-            btn.disabled = true;
+    const payload = {
+        executive: document.getElementById('v_executive').value,
+        companyName: document.getElementById('v_company').value,
+        location: document.getElementById('v_location').value,
+        personMet: document.getElementById('v_personMet').value,
+        designation: document.getElementById('v_designation').value,
+        mobile: document.getElementById('v_mobile').value,
+        email: document.getElementById('v_email').value,
+        purpose: document.getElementById('v_purpose').value,
+        notes: document.getElementById('v_notes').value,
+        checkIn: checkInTime.toLocaleTimeString(),
+        checkOut: checkOutTime.toLocaleTimeString(),
+        gps: window.currentGPS || "Not captured",
+        photoBase64: finalPhotoString
+    };
 
-            const payload = {
-                campaignName: document.getElementById('campaignName').value,
-                budget: document.getElementById('budget').value,
-                leads: document.getElementById('leads').value
-            };
+    statusEl.innerText = "Saving to Database...";
 
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'save_data',
-                        userId: currentUser.userId,
-                        payload: payload
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    statusMsg.innerText = "Saved successfully!";
-                    statusMsg.style.color = "green";
-                    document.getElementById('dataForm').reset();
-                    fetchMyData(); // Refresh the table automatically
-                }
-            } catch (error) {
-                statusMsg.innerText = "Error saving data.";
-                statusMsg.style.color = "red";
-            } finally {
-                btn.innerText = 'Save to My Database';
-                btn.disabled = false;
-                setTimeout(() => statusMsg.innerText = '', 3000); // Clear message after 3s
-            }
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'save_visit', userId: currentUser.userId, payload: payload })
         });
-
-        // 5. LOGOUT FUNCTION
-        function logout() {
-            localStorage.removeItem('marketing_session');
-            window.location.href = 'login.html';
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            statusEl.innerText = "Visit Logged & Email Triggered!";
+            statusEl.classList.replace('text-brand-600', 'text-emerald-600');
+            statusEl.classList.replace('dark:text-brand-400', 'dark:text-emerald-400');
+            
+            document.querySelectorAll('#screen-visit-entry input, #screen-visit-entry textarea').forEach(el => el.value = '');
+            
+            loadDashboardData(); 
+            
+            setTimeout(() => {
+                statusEl.innerText = "Not Started";
+                statusEl.className = "text-center mt-4 text-lg font-bold text-slate-500 dark:text-slate-400";
+                document.getElementById('startBtn').disabled = false;
+                document.getElementById('startBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }, 4000);
+        } else {
+            throw new Error(result.message);
         }
+    } catch (err) {
+        statusEl.innerText = "Error saving visit.";
+        statusEl.classList.replace('text-brand-600', 'text-rose-600');
+        console.error("Save Error:", err);
+    }
+  }
 
-        // Initialize the app
-        checkSession();
-    </script>
+  function renderHistory(data) {
+    const tbody = document.getElementById('historyTableBody');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    document.getElementById('visitCount').innerText = `Total Visited: ${data.length}`;
+
+    data.forEach((row, index) => {
+        tbody.innerHTML += `
+            <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors" onclick="toggleDetails('details-${index}')">
+                <td class="p-4">${row.date}</td>
+                <td class="p-4">${row.location}</td>
+                <td class="p-4 font-bold text-brand-600 dark:text-brand-400">${row.company}</td>
+            </tr>
+            <tr>
+                <td colspan="3" class="p-0 border-none">
+                    <div id="details-${index}" class="hidden bg-slate-50 dark:bg-slate-900 p-4 border-l-4 border-brand-500 text-sm">
+                        <p class="mb-1"><strong class="text-slate-900 dark:text-white">Time Spent:</strong> ${row.start} - ${row.stop}</p>
+                        <p><strong class="text-slate-900 dark:text-white">Logged By:</strong> ${row.executive}</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+  }
+
+  function toggleDetails(id) {
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('hidden');
+  }
+
+  function filterHistory() {
+    const filterDate = document.getElementById('dateFilter').value; // Format: YYYY-MM-DD
+    if(!filterDate) return renderHistory(fullHistoryData);
+    
+    const filtered = fullHistoryData.filter(row => row.dateISO === filterDate);
+    renderHistory(filtered);
+  }
+
+</script>
 </body>
 </html>
-  
